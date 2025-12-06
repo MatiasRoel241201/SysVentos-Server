@@ -7,7 +7,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://sysfront-production.up.railway.app',
+      'https://sisventos-frontend-production.up.railway.app',
     ],
     credentials: true,
   });
