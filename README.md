@@ -1,4 +1,4 @@
-# 🎪 SysVentos - Sistema de Gestión Gastronómica para Eventos
+# 🎪 SisVentos - Sistema de Gestión Gastronómica para Eventos
 
 Sistema backend para gestionar la parte gastronómica de eventos (festivales, kermeses, ferias, etc.), enfocado en la administración de productos, insumos, stock, órdenes y ventas.
 
