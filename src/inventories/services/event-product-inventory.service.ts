@@ -290,12 +290,16 @@ export class EventProductInventoryService {
     ): Promise<void> {
         const inventory = await this.findOne(eventId, productId);
 
-        if (inventory.currentQty < qty)
+        // Convertir a Number para evitar problemas con PostgreSQL NUMERIC
+        const currentStock = Number(inventory.currentQty);
+        const qtyToDecrease = Number(qty);
+
+        if (currentStock < qtyToDecrease)
             throw new BadRequestException(
                 `Stock insuficiente de "${inventory.product.name}"`,
             );
 
-        inventory.currentQty -= qty;
+        inventory.currentQty = currentStock - qtyToDecrease;
         await this.eventInventoryRepository.save(inventory);
     }
 
@@ -309,7 +313,8 @@ export class EventProductInventoryService {
     ): Promise<void> {
         const inventory = await this.findOne(eventId, productId);
 
-        inventory.currentQty += qty;
+        // Convertir a Number para evitar concatenación de strings (PostgreSQL NUMERIC)
+        inventory.currentQty = Number(inventory.currentQty) + Number(qty);
         await this.eventInventoryRepository.save(inventory);
     }
 

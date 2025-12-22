@@ -68,6 +68,13 @@ export class OrdersService {
             // Validar stock disponible
             if (Number(inventory.currentQty) < item.qty) throw new BadRequestException(`Stock insuficiente de "${inventory.product.name}". Disponible: ${inventory.currentQty}`);
 
+            // Descontar stock INMEDIATAMENTE al crear la orden
+            await this.productInventoryService.decreaseStock(
+                eventId,
+                item.productId,
+                item.qty,
+            );
+
             // Crear item
             const orderItem = this.orderItemRepository.create({
                 product: inventory.product,
@@ -184,6 +191,7 @@ export class OrdersService {
 
     /**
      * Cancelar orden (solo PENDING)
+     * Restaura el stock de productos ya que fue descontado al crear la orden
      */
     async cancel(orderId: string): Promise<Order> {
         const order = await this.findOne(orderId);
@@ -193,8 +201,15 @@ export class OrdersService {
         const cancelledStatus = await this.orderStatusService.findByName('CANCELLED');
         order.status = cancelledStatus;
 
-        // Actualizar estado de items
+        // Restaurar stock y actualizar estado de items
         for (const item of order.items) {
+            // Restaurar stock del producto
+            await this.productInventoryService.increaseStock(
+                order.event.id,
+                item.product.id,
+                Number(item.qty),
+            );
+
             item.status = 'CANCELLED';
             await this.orderItemRepository.save(item);
         }

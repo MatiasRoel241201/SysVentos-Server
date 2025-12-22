@@ -56,7 +56,7 @@ export class KitchenOrdersService {
 
     /**
      * Iniciar preparación (PENDING → IN_PROGRESS)
-     * Descuenta stock de productos
+     * NOTA: El stock ya fue descontado al crear la orden
      */
     async startPreparation(orderId: string): Promise<Order> {
         const order = await this.ordersService.findOne(orderId);
@@ -64,15 +64,8 @@ export class KitchenOrdersService {
         // Validar estado actual
         if (order.status.name !== 'PENDING') throw new BadRequestException('Solo se pueden iniciar órdenes en estado PENDING');
 
-        // Descontar stock de productos
+        // Actualizar estado de los items (stock ya fue descontado al crear la orden)
         for (const item of order.items) {
-            await this.productInventoryService.decreaseStock(
-                order.event.id,
-                item.product.id,
-                Number(item.qty),
-            );
-
-            // Actualizar estado del item
             item.status = 'IN_PROGRESS';
             await this.orderItemRepository.save(item);
         }

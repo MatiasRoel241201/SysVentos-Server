@@ -88,11 +88,24 @@ export class OrdersController {
 
     /**
      * Cancelar pedido
-     * Roles: Solo ADMIN
+     * Roles: CAJERO (solo su orden), ADMIN (cualquier orden)
      */
     @Patch(':orderId/cancel')
-    @Auth(ValidRoles.admin)
-    cancel(@Param('orderId', ParseUUIDPipe) orderId: string) {
+    @Auth(ValidRoles.cajero, ValidRoles.admin)
+    async cancel(
+        @Param('orderId', ParseUUIDPipe) orderId: string,
+        @GetUser() user: User,
+    ) {
+        const order = await this.ordersService.findOne(orderId);
+
+        // Si es CAJERO, validar que sea su propia orden
+        const isCajero = user.userRoles.some((r) => r.role.name === ValidRoles.cajero);
+        const isAdmin = user.userRoles.some((r) => r.role.name === ValidRoles.admin);
+
+        if (isCajero && !isAdmin && order.createdBy.id !== user.id) {
+            throw new ForbiddenException('No tienes permiso para cancelar esta orden');
+        }
+
         return this.ordersService.cancel(orderId);
     }
 }
